@@ -36,8 +36,11 @@ app.engine("handlebars", exphbs({
 app.set("view engine", "handlebars");
 
 // Database configuration with mongoose
-mongoose.connect("mongodb://heroku_jmv816f9:5j1nd4taq42hi29bfm5hobeujd@ds133192.mlab.com:33192/heroku_jmv816f9");
-//mongoose.connect("mongodb://localhost/mongoscraper");
+
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
+
+mongoose.connect(MONGODB_URI);
+
 var db = mongoose.connection;
 
 // Show any mongoose errors
@@ -51,8 +54,6 @@ db.once("open", function() {
 });
 
 // Routes
-// ======
-
 //GET requests to render Handlebars pages
 app.get("/", function(req, res) {
   Article.find({"saved": false}, function(error, data) {
@@ -73,7 +74,7 @@ app.get("/saved", function(req, res) {
   });
 });
 
-// A GET request to scrape the echojs website
+// A GET request to scrape the website
 app.get("/scrape", function(req, res) {
   // First, we grab the body of the html with request
   request("https://www.nytimes.com/", function(error, response, html) {
@@ -100,7 +101,7 @@ app.get("/scrape", function(req, res) {
 
       // Using our Article model, create a new entry
       // This effectively passes the result object to the entry (and the title and link)
-      var entry = new Article(result);
+      let entry = new Article(result);
 
       // Now, save that entry to the db
       entry.save(function(err, doc) {
